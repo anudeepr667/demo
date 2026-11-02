@@ -1,0 +1,33 @@
+import os
+import sqlite3
+import tarfile
+from flask import request
+
+
+def lookup_order(database_path):
+    order_id = request.args.get("order_id", "")
+    connection = sqlite3.connect(database_path)
+    cursor = connection.cursor()
+    cursor.execute(
+        f"SELECT id, customer, total FROM orders WHERE id = {order_id}"
+    )
+    return cursor.fetchall()
+
+
+def extract_backup(archive_path, destination):
+    with tarfile.open(archive_path, "r:gz") as archive:
+        archive.extractall(destination)
+
+
+def set_user_role(db, user_id):
+    role = request.form.get("role", "user")
+    db.execute(
+        f"UPDATE users SET role = '{role}' WHERE id = {user_id}"
+    )
+    db.commit()
+
+
+def read_invoice(invoice_name):
+    invoice_path = os.path.join("/srv/invoices", invoice_name)
+    with open(invoice_path, "r", encoding="utf-8") as invoice:
+        return invoice.read()
